@@ -24,30 +24,24 @@ dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.2
-  # for working with auth code grant
   oauth2: ^2.0.0
-  # for holding the access token
+  # stores the access token from oauth2
   flutter_secure_storage: ^4.2.0
-  # either data type
   dartz: ^0.10.0-nullsafety.2
-  # http calls
-  dio: ^4.0.0
-  # to use flutter riverpod with hookds
+  dio: ^4.0.0 
   flutter_hooks: ^0.16.0
   hooks_riverpod:
     git:
       url: https://github.com/rrousselGit/river_pod.git
       ref: 147be70df096015af0633456a951d8f2f9c66dc9
       path: packages/hooks_riverpod
-  # data classes
   freezed_annotation: ^0.14.2
-  # opens up the login process using the web
+  # To be redirected to the GitHub sign in webpage
   webview_flutter: ^2.0.8
-  # creates a better snackbar
+  # To show snackbars
   flash: ^2.0.0
-  # Uses navigation 2.0 much easier
+  # For navigator 2.0
   auto_route: ^2.2.0
-
 
 dev_dependencies:
   flutter_test:
