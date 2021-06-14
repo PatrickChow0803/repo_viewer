@@ -4,6 +4,21 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:oauth2/oauth2.dart';
 import 'package:repo_viewer/auth/domain/auth_failure.dart';
 import 'package:repo_viewer/auth/infrastructure/credentials_storage/credentials_storage.dart';
+import 'package:http/http.dart' as http;
+
+// this class is needed because Github will return the access token as
+// url format coded response. But we want the response to be in json format.
+// therefore you need to add Accept: application/json to the header
+// But we can't just edit the code in packages so we need to make our own
+
+class GithubOAuthHttpClient extends http.BaseClient {
+  final httpClient = http.Client();
+  @override
+  Future<http.StreamedResponse> send(http.BaseRequest request) {
+    request.headers['Accept'] = 'application/json';
+    return httpClient.send(request);
+  }
+}
 
 class GithubAuthenticator {
   final CredentialsStorage _credentialsStorage;
@@ -68,6 +83,7 @@ class GithubAuthenticator {
       authorizationEndpoint,
       tokenEndpoint,
       secret: clientSecret,
+      httpClient: GithubOAuthHttpClient(),
     );
   }
 
