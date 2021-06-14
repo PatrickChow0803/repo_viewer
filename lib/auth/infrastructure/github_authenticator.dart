@@ -1,10 +1,14 @@
+import 'dart:convert';
+
 import 'package:dartz/dartz.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:oauth2/oauth2.dart';
 import 'package:repo_viewer/auth/domain/auth_failure.dart';
 import 'package:repo_viewer/auth/infrastructure/credentials_storage/credentials_storage.dart';
 import 'package:http/http.dart' as http;
+import 'package:repo_viewer/core/shared/encoders.dart';
 
 // this class is needed because Github will return the access token as
 // url format coded response. But we want the response to be in json format.
@@ -22,8 +26,9 @@ class GithubOAuthHttpClient extends http.BaseClient {
 
 class GithubAuthenticator {
   final CredentialsStorage _credentialsStorage;
+  final Dio _dio;
 
-  GithubAuthenticator(this._credentialsStorage);
+  GithubAuthenticator(this._credentialsStorage, this._dio);
 
   // https://github.com/settings/applications/1643784
   // copy paste the client ID
@@ -44,6 +49,11 @@ class GithubAuthenticator {
 
   static final tokenEndpoint =
       Uri.parse('https://github.com/login/oauth/access_token');
+
+  // https://docs.github.com/en/rest/reference/apps#delete-an-app-token reference
+  // endpoint to delete the access tokens. Called when a user signs off.
+  static final revocationEndpoint =
+      Uri.parse('https://api.github.com/applications/$clientId/token');
 
   // https://github.com/settings/applications/1643784
   // copy paste the Authorization callback URL
@@ -77,6 +87,7 @@ class GithubAuthenticator {
   Future<bool> isSignedIn() =>
       getSignedInCredentials().then((credentials) => credentials != null);
 
+  // the signing in process
   AuthorizationCodeGrant createGrant() {
     return AuthorizationCodeGrant(
       clientId,
@@ -116,6 +127,31 @@ class GithubAuthenticator {
       return left(const AuthFailure.server());
     } on AuthorizationException catch (e) {
       return left(AuthFailure.server('${e.error}: ${e.description}'));
+    } on PlatformException {
+      return left(const AuthFailure.storage());
+    }
+  }
+
+  // called when the user signs out
+  // the only things that's really needed is the await _credentialsStorage.clear()
+  // everything else is to delete the access token so that it can't be used anymore
+  Future<Either<AuthFailure, Unit>> signOut() async {
+    final accessToken = await _credentialsStorage
+        .read()
+        .then((credentials) => credentials?.accessToken);
+
+    final usernameAndPassword =
+        stringToBase64.encode('$clientId:$clientSecret');
+    try {
+      _dio.deleteUri(revocationEndpoint,
+          data: {
+            'access_token': accessToken,
+          },
+          options: Options(headers: {
+            'Authorization': 'basic $usernameAndPassword',
+          }));
+      await _credentialsStorage.clear();
+      return right(unit);
     } on PlatformException {
       return left(const AuthFailure.storage());
     }
