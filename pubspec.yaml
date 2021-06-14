@@ -25,10 +25,9 @@ dependencies:
     sdk: flutter
   cupertino_icons: ^1.0.2
   oauth2: ^2.0.0
-  # stores the access token from oauth2
   flutter_secure_storage: ^4.2.0
   dartz: ^0.10.0-nullsafety.2
-  dio: ^4.0.0 
+  dio: ^4.0.0
   flutter_hooks: ^0.16.0
   hooks_riverpod:
     git:
@@ -36,12 +35,10 @@ dependencies:
       ref: 147be70df096015af0633456a951d8f2f9c66dc9
       path: packages/hooks_riverpod
   freezed_annotation: ^0.14.2
-  # To be redirected to the GitHub sign in webpage
   webview_flutter: ^2.0.8
-  # To show snackbars
   flash: ^2.0.0
-  # For navigator 2.0
   auto_route: ^2.2.0
+  flutter_dotenv: ^5.0.0
 
 dev_dependencies:
   flutter_test:
@@ -73,8 +70,8 @@ flutter:
   # the material Icons class.
   uses-material-design: true
   # To add assets to your application, add an assets section, like this:
-  # assets:
-  #   - images/a_dot_burr.jpeg
+  assets:
+    - .env
   #   - images/a_dot_ham.jpeg
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.
