@@ -1,6 +1,8 @@
+import 'package:dartz/dartz.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:oauth2/oauth2.dart';
+import 'package:repo_viewer/auth/domain/auth_failure.dart';
 import 'package:repo_viewer/auth/infrastructure/credentials_storage/credentials_storage.dart';
 
 class GithubAuthenticator {
@@ -69,7 +71,37 @@ class GithubAuthenticator {
     );
   }
 
+  // Authorization means that the user will input their username and password
+  // as if they were signing in regularly to github
+  // then, if the log is sucessful, they'll be redirected to the redirectUrl which
+  // is 'http://localhost:3000/callback'
   Uri getAuthorizationUrl(AuthorizationCodeGrant grant) {
     return grant.getAuthorizationUrl(redirectUrl, scopes: scopes);
+  }
+
+  // Unit means void. It comes from Dartz
+  // Use Unit here when you want to transform exceptions into failures when using the Either type
+  // return type could be Future<void> if you were to handel exceptions the normal way(Not using failures, just regular exceptions)
+  // Therefore when this method fails, it should return an AuthFailure
+  // when it passes, it should return nothing
+  // this method is used to actually get and save the access token
+  // since handleAuthorizationResponse can return a FormatException or an AuthorizationException
+  // place this inside of a try catch
+  Future<Either<AuthFailure, Unit>> handleAuthorizationResponse(
+    AuthorizationCodeGrant grant,
+    Map<String, String> queryParams,
+  ) async {
+    try {
+      final httpClient = await grant.handleAuthorizationResponse(queryParams);
+      await _credentialsStorage.save(httpClient.credentials);
+      // return nothing if successful
+      return right(unit);
+    } on FormatException {
+      return left(const AuthFailure.server());
+    } on AuthorizationException catch (e) {
+      return left(AuthFailure.server('${e.error}: ${e.description}'));
+    } on PlatformException {
+      return left(const AuthFailure.storage());
+    }
   }
 }
