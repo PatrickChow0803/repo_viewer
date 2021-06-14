@@ -10,6 +10,7 @@ import 'package:repo_viewer/auth/domain/auth_failure.dart';
 import 'package:repo_viewer/auth/infrastructure/credentials_storage/credentials_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:repo_viewer/core/shared/encoders.dart';
+import 'package:repo_viewer/core/infrastructure/dio_extensions.dart';
 
 // this class is needed because Github will return the access token as
 // url format coded response. But we want the response to be in json format.
@@ -74,7 +75,8 @@ class GithubAuthenticator {
       // This code below is what to do if they do refresh.
       if (storedCredentials != null) {
         if (storedCredentials.canRefresh && storedCredentials.isExpired) {
-          // TODO: refresh
+          final failureOrCredentials = await refresh(storedCredentials);
+          return failureOrCredentials.fold((l) => null, (r) => r);
         }
       }
       return storedCredentials;
@@ -158,14 +160,35 @@ class GithubAuthenticator {
           ),
         );
       } on DioError catch (e) {
-        if (e.type == DioErrorType.other && e.error is SocketException) {
-          print('Token not revoked');
+        if (e.isNoConnectionError) {
+          // Ignoring
         } else {
           rethrow;
         }
       }
       await _credentialsStorage.clear();
       return right(unit);
+    } on PlatformException {
+      return left(const AuthFailure.storage());
+    }
+  }
+
+  Future<Either<AuthFailure, Credentials>> refresh(
+    // old credentials
+    Credentials credentials,
+  ) async {
+    try {
+      final refreshedCredentials = await credentials.refresh(
+        identifier: clientId,
+        secret: clientSecret,
+        httpClient: GithubOAuthHttpClient(),
+      );
+      await _credentialsStorage.save(refreshedCredentials);
+      return right(refreshedCredentials);
+    } on FormatException {
+      return left(const AuthFailure.server());
+    } on AuthorizationException catch (e) {
+      return left(AuthFailure.server('${e.error}: ${e.description}'));
     } on PlatformException {
       return left(const AuthFailure.storage());
     }
