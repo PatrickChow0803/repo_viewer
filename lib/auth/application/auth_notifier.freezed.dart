@@ -28,8 +28,10 @@ class _$AuthStateTearOff {
     return const _Authenticated();
   }
 
-  _Failure failure() {
-    return const _Failure();
+  _Failure failure(AuthFailure failure) {
+    return _Failure(
+      failure,
+    );
   }
 }
 
@@ -43,7 +45,7 @@ mixin _$AuthState {
     required TResult Function() initial,
     required TResult Function() unauthenticated,
     required TResult Function() authenticated,
-    required TResult Function() failure,
+    required TResult Function(AuthFailure failure) failure,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
@@ -51,7 +53,7 @@ mixin _$AuthState {
     TResult Function()? initial,
     TResult Function()? unauthenticated,
     TResult Function()? authenticated,
-    TResult Function()? failure,
+    TResult Function(AuthFailure failure)? failure,
     required TResult orElse(),
   }) =>
       throw _privateConstructorUsedError;
@@ -129,7 +131,7 @@ class _$_Initial extends _Initial {
     required TResult Function() initial,
     required TResult Function() unauthenticated,
     required TResult Function() authenticated,
-    required TResult Function() failure,
+    required TResult Function(AuthFailure failure) failure,
   }) {
     return initial();
   }
@@ -140,7 +142,7 @@ class _$_Initial extends _Initial {
     TResult Function()? initial,
     TResult Function()? unauthenticated,
     TResult Function()? authenticated,
-    TResult Function()? failure,
+    TResult Function(AuthFailure failure)? failure,
     required TResult orElse(),
   }) {
     if (initial != null) {
@@ -223,7 +225,7 @@ class _$_Unauthenticated extends _Unauthenticated {
     required TResult Function() initial,
     required TResult Function() unauthenticated,
     required TResult Function() authenticated,
-    required TResult Function() failure,
+    required TResult Function(AuthFailure failure) failure,
   }) {
     return unauthenticated();
   }
@@ -234,7 +236,7 @@ class _$_Unauthenticated extends _Unauthenticated {
     TResult Function()? initial,
     TResult Function()? unauthenticated,
     TResult Function()? authenticated,
-    TResult Function()? failure,
+    TResult Function(AuthFailure failure)? failure,
     required TResult orElse(),
   }) {
     if (unauthenticated != null) {
@@ -317,7 +319,7 @@ class _$_Authenticated extends _Authenticated {
     required TResult Function() initial,
     required TResult Function() unauthenticated,
     required TResult Function() authenticated,
-    required TResult Function() failure,
+    required TResult Function(AuthFailure failure) failure,
   }) {
     return authenticated();
   }
@@ -328,7 +330,7 @@ class _$_Authenticated extends _Authenticated {
     TResult Function()? initial,
     TResult Function()? unauthenticated,
     TResult Function()? authenticated,
-    TResult Function()? failure,
+    TResult Function(AuthFailure failure)? failure,
     required TResult orElse(),
   }) {
     if (authenticated != null) {
@@ -373,6 +375,9 @@ abstract class _Authenticated extends AuthState {
 abstract class _$FailureCopyWith<$Res> {
   factory _$FailureCopyWith(_Failure value, $Res Function(_Failure) then) =
       __$FailureCopyWithImpl<$Res>;
+  $Res call({AuthFailure failure});
+
+  $AuthFailureCopyWith<$Res> get failure;
 }
 
 /// @nodoc
@@ -383,25 +388,56 @@ class __$FailureCopyWithImpl<$Res> extends _$AuthStateCopyWithImpl<$Res>
 
   @override
   _Failure get _value => super._value as _Failure;
+
+  @override
+  $Res call({
+    Object? failure = freezed,
+  }) {
+    return _then(_Failure(
+      failure == freezed
+          ? _value.failure
+          : failure // ignore: cast_nullable_to_non_nullable
+              as AuthFailure,
+    ));
+  }
+
+  @override
+  $AuthFailureCopyWith<$Res> get failure {
+    return $AuthFailureCopyWith<$Res>(_value.failure, (value) {
+      return _then(_value.copyWith(failure: value));
+    });
+  }
 }
 
 /// @nodoc
 
 class _$_Failure extends _Failure {
-  const _$_Failure() : super._();
+  const _$_Failure(this.failure) : super._();
+
+  @override
+  final AuthFailure failure;
 
   @override
   String toString() {
-    return 'AuthState.failure()';
+    return 'AuthState.failure(failure: $failure)';
   }
 
   @override
   bool operator ==(dynamic other) {
-    return identical(this, other) || (other is _Failure);
+    return identical(this, other) ||
+        (other is _Failure &&
+            (identical(other.failure, failure) ||
+                const DeepCollectionEquality().equals(other.failure, failure)));
   }
 
   @override
-  int get hashCode => runtimeType.hashCode;
+  int get hashCode =>
+      runtimeType.hashCode ^ const DeepCollectionEquality().hash(failure);
+
+  @JsonKey(ignore: true)
+  @override
+  _$FailureCopyWith<_Failure> get copyWith =>
+      __$FailureCopyWithImpl<_Failure>(this, _$identity);
 
   @override
   @optionalTypeArgs
@@ -409,9 +445,9 @@ class _$_Failure extends _Failure {
     required TResult Function() initial,
     required TResult Function() unauthenticated,
     required TResult Function() authenticated,
-    required TResult Function() failure,
+    required TResult Function(AuthFailure failure) failure,
   }) {
-    return failure();
+    return failure(this.failure);
   }
 
   @override
@@ -420,11 +456,11 @@ class _$_Failure extends _Failure {
     TResult Function()? initial,
     TResult Function()? unauthenticated,
     TResult Function()? authenticated,
-    TResult Function()? failure,
+    TResult Function(AuthFailure failure)? failure,
     required TResult orElse(),
   }) {
     if (failure != null) {
-      return failure();
+      return failure(this.failure);
     }
     return orElse();
   }
@@ -457,6 +493,11 @@ class _$_Failure extends _Failure {
 }
 
 abstract class _Failure extends AuthState {
-  const factory _Failure() = _$_Failure;
+  const factory _Failure(AuthFailure failure) = _$_Failure;
   const _Failure._() : super._();
+
+  AuthFailure get failure => throw _privateConstructorUsedError;
+  @JsonKey(ignore: true)
+  _$FailureCopyWith<_Failure> get copyWith =>
+      throw _privateConstructorUsedError;
 }
